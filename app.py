@@ -8,216 +8,288 @@ import shap
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Credit Risk Intelligence", layout="wide", initial_sidebar_state="expanded")
+# --- Page Config ---
+st.set_page_config(
+    page_title="Credit Risk Intelligence Pro",
+    page_icon="🏦",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# --- Custom CSS for Enterprise Blue ---
+# --- Enhanced Enterprise Aesthetics ---
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+    
     :root {
         --primary: #0A2540;
         --secondary: #0066CC;
-        --highlight: #E5F0FA;
-        --text: #333333;
+        --accent: #00D1FF;
+        --bg-light: #F4F7FA;
     }
+    
     .stApp {
-        background-color: #F8F9FA;
+        background: linear-gradient(135deg, #F8F9FB 0%, #E9EFF5 100%);
     }
-    h1, h2, h3 {
-        color: var(--primary) !important;
-    }
-    .stButton>button {
-        background-color: var(--secondary);
-        color: white;
-        border-radius: 6px;
-        border: none;
-        padding: 0.5rem 1rem;
-        transition: all 0.3s;
-    }
-    .stButton>button:hover {
-        background-color: var(--primary);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .metric-card {
+    
+    /* Premium Sidebar */
+    [data-testid="stSidebar"] {
         background-color: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        border-top: 4px solid var(--secondary);
+        border-right: 1px solid #E0E4E8;
+    }
+    
+    /* Cards & Containers */
+    .metric-container {
+        background: white;
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #EFF2F5;
+        margin-bottom: 20px;
+    }
+    
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-block;
+        margin-bottom: 12px;
+    }
+    
+    .badge-green { background: #E6F9F0; color: #10B981; }
+    .badge-orange { background: #FFF7ED; color: #F59E0B; }
+    .badge-red { background: #FEF2F2; color: #EF4444; }
+    
+    /* Typography */
+    h1 {
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: var(--primary);
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--secondary);
+        padding-left: 12px;
+    }
+
+    .info-label {
+        color: #64748B;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    
+    .big-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
     }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🏦 Credit Risk Intelligence")
-st.markdown("**White-Box AI System do oceny ryzyka kredytowego klienta w pełni zoptymalizowany pod kątem transparentności.**")
+# --- Header ---
+col_head1, col_head2 = st.columns([2, 1])
+with col_head1:
+    st.title("🏦 Credit Risk Intelligence Pro")
+    st.markdown("<p style='color:#64748B; font-size:1.1rem;'>System klasy Enterprise do zaawansowanej oceny wiarygodności kredytowej i wyjaśnialności decyzji AI.</p>", unsafe_allow_html=True)
 
-# --- Sidebar ---
-st.sidebar.header("📋 Parametry Aplikanta")
+# --- Sidebar Inputs ---
+st.sidebar.header("📋 Dane Wnioskodawcy")
 
-kwota = st.sidebar.number_input("Kwota pożyczki (PLN)", min_value=1000, max_value=1000000, value=50000, step=1000, help="Całkowita wnioskowana kwota.")
-dochod = st.sidebar.number_input("Dochód miesięczny netto (PLN)", min_value=1000, max_value=100000, value=8000, step=500, help="Miesięczne zarobki po odliczeniu podatków.")
-wiek = st.sidebar.slider("Wiek (lata)", min_value=18, max_value=80, value=35)
-staz = st.sidebar.number_input("Staż pracy (lata)", min_value=0, max_value=50, value=5, help="Stabilność zatrudnienia.")
-osoby = st.sidebar.number_input("Liczba osób na utrzymaniu", min_value=0, max_value=10, value=1)
+with st.sidebar:
+    kwota = st.number_input("Kwota pożyczki (PLN)", 1000, 1000000, 50000, 5000)
+    oprocentowanie = st.slider("Oprocentowanie (%)", 1.0, 25.0, 8.5, 0.5, help="Roczne oprocentowanie nominalne.")
+    okres = st.slider("Okres spłaty (miesiace)", 6, 120, 36)
+    st.markdown("---")
+    dochod = st.number_input("Dochód netto (PLN/msc)", 1000, 100000, 8000, 500)
+    wiek = st.slider("Wiek (lata)", 18, 80, 35)
+    staz = st.number_input("Staż pracy (lata)", 0, 50, 5)
+    osoby = st.number_input("Osoby na utrzymaniu", 0, 10, 1)
 
-dti_tooltip = "Debt-to-Income (DTI) - Wskaźnik określający stosunek zobowiązań kredytowych do dochodów. Kluczowy parametr oceny ryzyka."
-st.sidebar.info(f"💡 **Słowniczek:**\n\n{dti_tooltip}")
+    st.info("💡 **DTI (Debt-to-Income):** Wskaźnik ten rośnie wraz z kwotą i oprocentowaniem, co bezpośrednio wpływa na ryzyko niewypłacalności.")
 
-# --- Data Generation & Modeling ---
+# --- Calculation Engine ---
+rata_miesieczna = (kwota * (oprocentowanie/100/12)) / (1 - (1 + oprocentowanie/100/12)**(-okres))
+calkowity_koszt = rata_miesieczna * okres - kwota
+
+# --- Synthetic Data with Interest & Duration ---
 @st.cache_data
-def load_data():
+def load_enhanced_data():
     np.random.seed(42)
-    n = 1000
+    n = 1500
     age = np.random.randint(20, 70, n)
     income = np.random.randint(3000, 30000, n)
     employment = np.random.randint(0, 40, n)
     dependents = np.random.randint(0, 5, n)
-    loan_amount = np.random.randint(5000, 200000, n)
+    loan_amount = np.random.randint(5000, 300000, n)
+    interest = np.random.uniform(3, 20, n)
     
-    # Syntetyczna logika ryzyka
-    dti = loan_amount / (income * 12 + 1)
+    # Calculate synthetic installment
+    r = interest / 100 / 12
+    inst = (loan_amount * r) / (1 - (1 + r)**(-36)) # Assuming constant 36m for base training simplicity
     
-    # Wzór logit - wyższe wartości z to większe ryzyko defaultu (1)
-    # Starsi, wyższy dochód, dłuższy staż = mniejsze ryzyko
-    # Wyższe DTI, więcej osób na utrzymaniu = większe ryzyko
-    z = -1.5 - 0.03 * age - 0.15 * employment + 0.4 * dependents + 5 * dti
+    dti = inst / (income + 1)
+    
+    # Risk Logic (Higher interest = Higher risk)
+    z = -2.0 - 0.04 * age - 0.12 * employment + 0.5 * dependents + 8.0 * dti + 0.05 * interest
     p = 1 / (1 + np.exp(-z))
-    
     default = np.random.binomial(1, p)
     
-    df = pd.DataFrame({
+    return pd.DataFrame({
         'Wiek': age,
         'Dochod': income,
         'Staz': employment,
         'Utrzymanie': dependents,
         'Kwota': loan_amount,
+        'Oprocentowanie': interest,
         'Default': default
     })
-    return df
 
-if st.button("🚀 Load Benchmark Data & Analyze", use_container_width=True):
-    with st.spinner("Trenowanie modeli AI (White-box)..."):
-        df = load_data()
+if st.button("🚀 Przeprowadź Analizę Ryzyka", use_container_width=True):
+    with st.spinner("Przetwarzanie danych i analiza portfela..."):
+        df = load_enhanced_data()
         X = df.drop(columns=['Default'])
         y = df['Default']
         
-        # Skalowanie (niezbędne dla stabilności regresji logistycznej)
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
         
-        # Logistic Regression dla głównego silnika predykcji (Vercel memory friendly)
-        lr_model = LogisticRegression()
+        lr_model = LogisticRegression(class_weight='balanced') # Balanced for better sensitivity
         lr_model.fit(X_scaled, y)
         
-        # Decision Tree dla edukacyjnej wizualizacji drzewa logicznego
         dt_model = DecisionTreeClassifier(max_depth=3, random_state=42)
         dt_model.fit(X, y)
         
-        # Dane bieżącego klienta z Sidebar
-        input_data = pd.DataFrame({
+        # User input for prediction
+        user_input = pd.DataFrame({
             'Wiek': [wiek],
             'Dochod': [dochod],
             'Staz': [staz],
             'Utrzymanie': [osoby],
-            'Kwota': [kwota]
+            'Kwota': [kwota],
+            'Oprocentowanie': [oprocentowanie]
         })
+        user_scaled = scaler.transform(user_input)
         
-        input_scaled = scaler.transform(input_data)
+        prob_default = lr_model.predict_proba(user_scaled)[0, 1]
+        risk = round(prob_default * 100, 2)
         
-        # Predykcja
-        prob_default = lr_model.predict_proba(input_scaled)[0, 1]
-        risk_percentage = round(prob_default * 100, 2)
-        
-        # Logika biznesowa - Decyzja
-        if risk_percentage < 30:
-            status, color, msg = "Zatwierdzono", "green", "Niskie ryzyko kredytowe. Brak przeciwwskazań do udzielenia finansowania."
-        elif risk_percentage < 70:
-            status, color, msg = "Wymagana dodatkowa weryfikacja", "orange", "Umiarkowane ryzyko. Rekomendowana manualna analiza zdolności przez analityka."
+        # Decision Logic
+        if risk < 35:
+            status, badge, color, msg = "AKCEPTACJA", "badge-green", "#10B981", "Wysoka zdolność kredytowa. Klient spełnia kryteria bezpiecznego finansowania."
+        elif risk < 65:
+            status, badge, color, msg = "WERYFIKACJA", "badge-orange", "#F59E0B", "Ryzyko umiarkowane. Zalecane zabezpieczenie lub dodatkowe dokumenty dochodowe."
         else:
-            status, color, msg = "Odrzucono", "red", "Wysokie ryzyko niewypłacalności (Default Risk). Aplikacja kategorycznie odrzucona."
-        
-        # ==========================================
-        # SEKCJA 1: WYNIK RYZYKA (GAUGE CHART)
-        # ==========================================
+            status, badge, color, msg = "ODMOWA", "badge-red", "#EF4444", "Zbyt wysokie ryzyko niewypłacalności. Wniosek odrzucony systemowo."
+            
+        # --- UI LAYOUT: RESULTS ---
         st.markdown("---")
-        st.subheader("📊 Wynik Oceny Ryzyka")
-        
-        col1, col2 = st.columns([1, 1.5])
+        col1, col2, col3 = st.columns([1, 1, 1.2])
         
         with col1:
             st.markdown(f"""
-            <div class="metric-card" style="border-top-color: {color}; height: 100%;">
-                <h3 style="margin-top:0; color:{color} !important;">Status decyzyjny:<br>{status}</h3>
-                <p style="font-size: 1.1em; color: gray; margin-top:20px;">{msg}</p>
-                <hr>
-                <p style="font-size: 1.25em;"><b>Prawdopodobieństwo Defaultu:</b> {risk_percentage}%</p>
+            <div class="metric-container">
+                <div class="info-label">Rata Miesięczna</div>
+                <div class="big-value">{rata_miesieczna:,.2f} PLN</div>
+                <p style='color:#64748B; font-size:0.8rem; margin-top:10px;'>Całkowity koszt odsetek: {calkowity_koszt:,.2f} PLN</p>
             </div>
             """, unsafe_allow_html=True)
             
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="info-label">Wskaźnik DTI</div>
+                <div class="big-value">{ (rata_miesieczna/dochod)*100 :.1f}%</div>
+                <p style='color:#64748B; font-size:0.8rem; margin-top:10px;'>Obciążenie dochodu ratą.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
         with col2:
-            fig_gauge = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=risk_percentage,
-                domain={'x': [0, 1], 'y': [0, 1]},
-                title={'text': "Poziom Ryzyka (%)"},
-                gauge={
-                    'axis': {'range': [None, 100]},
-                    'bar': {'color': "rgba(0,0,0,0.2)"},
-                    'steps': [
-                        {'range': [0, 30], 'color': "#d4edda"},   # light green
-                        {'range': [30, 70], 'color': "#fff3cd"},  # light orange
-                        {'range': [70, 100], 'color': "#f8d7da"}  # light red
-                    ],
-                    'threshold': {
-                        'line': {'color': color, 'width': 6},
-                        'thickness': 0.8,
-                        'value': risk_percentage
-                    }
-                }
-            ))
-            fig_gauge.update_layout(height=280, margin=dict(l=20, r=20, t=40, b=20))
-            st.plotly_chart(fig_gauge, use_container_width=True)
+            st.markdown(f"""
+            <div class="metric-container" style="border-top: 5px solid {color};">
+                <span class="status-badge {badge}">{status}</span>
+                <div class="info-label">Rekomendacja Systemu</div>
+                <p style="font-size: 0.95rem; margin-bottom:0;">{msg}</p>
+            </div>
+            """, unsafe_allow_html=True)
             
-        # ==========================================
-        # SEKCJA 2: TRANSPARENTNOŚĆ (SHAP VALUES)
-        # ==========================================
-        st.markdown("---")
-        st.subheader("🔍 Dlaczego podjęto taką decyzję? (Analiza SHAP)")
-        st.write("Wykres pokazuje tzw. Wartości SHAP (SHapley Additive exPlanations) - obrazuje jak dany parametr wpłynął na OSTATECZNE RYZYKO w porównaniu do średniej wartości w portfelu. Wartości dodatnie podnoszą ryzyko (źle), ujemne obniżają (dobrze).")
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="info-label">Prawdopodobieństwo PD</div>
+                <div class="big-value" style="color:{color};">{risk}%</div>
+                <p style='color:#64748B; font-size:0.8rem; margin-top:10px;'>Prawdopodobieństwo Niewypłacalności.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col3:
+            fig = go.Figure(go.Indicator(
+                mode = "gauge+number",
+                value = risk,
+                domain = {'x': [0, 1], 'y': [0, 1]},
+                title = {'text': "Credit Risk Score", 'font': {'size': 20, 'color': '#0A2540'}},
+                gauge = {
+                    'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                    'bar': {'color': color},
+                    'bgcolor': "white",
+                    'borderwidth': 2,
+                    'bordercolor': "#E0E4E8",
+                    'steps': [
+                        {'range': [0, 35], 'color': '#F0FDF4'},
+                        {'range': [35, 65], 'color': '#FFFBEB'},
+                        {'range': [65, 100], 'color': '#FEF2F2'}],
+                    'threshold': {
+                        'line': {'color': "black", 'width': 4},
+                        'thickness': 0.75,
+                        'value': risk}}
+            ))
+            fig.update_layout(paper_bgcolor = "rgba(0,0,0,0)", font = {'color': "darkblue", 'family': "Inter"}, height=350, margin=dict(t=50, b=0))
+            st.plotly_chart(fig, use_container_width=True)
+
+        # --- SHAP ANALYSIS ---
+        st.markdown("<p class='section-title'>🔍 Explainable AI (XAI): Analiza Wpływu Cech</p>", unsafe_allow_html=True)
+        st.write("Składowe decyzji: Wartości dodatnie (czerwone) zwiększają ryzyko, ujemne (niebieskie) działają na korzyść klienta.")
         
-        # Wyliczanie SHAP tylko dla 1 konkretnego przypadku (optymalizacja limitu pamięci Vercel)
         explainer = shap.LinearExplainer(lr_model, X_scaled)
-        shap_values = explainer.shap_values(input_scaled)
+        shap_values = explainer.shap_values(user_scaled)
         
         try:
-            # SHAP 0.40+ style waterall
-            expl = shap.Explanation(values=shap_values[0], 
-                                    base_values=explainer.expected_value, 
-                                    data=input_data.iloc[0], 
-                                    feature_names=input_data.columns)
-            fig_shap, ax = plt.subplots(figsize=(10, 5))
-            shap.plots.waterfall(expl, show=False)
+            explanation = shap.Explanation(
+                values=shap_values[0],
+                base_values=explainer.expected_value,
+                data=user_input.iloc[0],
+                feature_names=user_input.columns
+            )
+            fig_shap, ax = plt.subplots(figsize=(12, 5))
+            shap.plots.waterfall(explanation, show=False)
+            plt.title("Wpływ parametrów na wynik ryzyka (Waterfall Plot)", fontsize=14, fontweight='bold', pad=20)
             plt.tight_layout()
             st.pyplot(fig_shap)
-        except Exception as e:
-            # Fallback for older SHAP syntax/versions or rendering issues
-            fig_shap, ax = plt.subplots(figsize=(10, 5))
-            shap.summary_plot(shap_values, input_scaled, feature_names=input_data.columns, plot_type="bar", show=False)
-            plt.tight_layout()
-            st.pyplot(fig_shap)
+        except:
+            st.error("Błąd generowania wykresu waterfall. Wyświetlanie alternatywne.")
         
-        # ==========================================
-        # SEKCJA 3: DRZEWO DECYZYJNE
-        # ==========================================
-        st.markdown("---")
-        st.subheader("🌳 Wizualizacja Logiki (Uproszczone Drzewo Decyzyjne)")
-        
-        with st.expander("Rozwiń graf drzewa 'Jeśli-To' dla ujęcia regułowego", expanded=False):
-            st.write("Drzewo ukazuje uproszczone granice decyzyjne na bazie zebranych danych analitycznych (0 = Spłaci, 1 = Default). Modele oparte o Logistic Regression dzielą przestrzeń inaczej, ale drzewo to doskonałe uzupełnienie edukacyjne (White-box).")
-            fig_tree, ax_tree = plt.subplots(figsize=(14, 6), dpi=150)
-            plot_tree(dt_model, feature_names=X.columns, class_names=['Spłaci', 'Default'], 
-                      filled=True, rounded=True, ax=ax_tree, fontsize=9)
+        # --- DECISION TREE ---
+        with st.expander("🌳 Przejrzyj Logikę Drzewa Decyzyjnego (Heurystyka)"):
+            st.write("Poniższe drzewo wizualizuje uproszczone reguły klasyfikacji ('jeśli-to') wydzielone z danych benchmarkowych.")
+            fig_tree, ax_tree = plt.subplots(figsize=(16, 7), dpi=150)
+            plot_tree(dt_model, feature_names=X.columns, class_names=['Niskie Ryzyko', 'Wysokie Ryzyko'], 
+                      filled=True, rounded=True, ax=ax_tree, fontsize=8, precision=1)
             plt.tight_layout()
             st.pyplot(fig_tree)
 
 else:
-    st.info("Wprowadź docelowe parametry kandydata w lewym panelu bocznym i wywołaj **'Load Benchmark Data & Analyze'**, aby uzyskać dedykowaną ocenę ryzyka (Credit Risk Score).")
+    # Landing message if no analysis yet
+    st.markdown("""
+    <div style="background: white; padding: 40px; border-radius: 20px; text-align: center; border: 1px dashed #CBD5E1; margin-top:40px;">
+        <h2 style="color:#64748B; margin-bottom:10px;">Gotowy do analizy?</h2>
+        <p style="color:#94A3B8;">Uzupełnij dane finansowe i osobiste w panelu bocznym,<br>a następnie kliknij przycisk powyżej, aby uruchomić silnik Intelligence Pro.</p>
+    </div>
+    """, unsafe_allow_html=True)
