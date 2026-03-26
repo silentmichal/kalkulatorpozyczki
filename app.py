@@ -32,13 +32,23 @@ st.markdown("""
         --bg-light: #F4F7FA;
     }
     
-    .stApp {
-        background: linear-gradient(135deg, #F8F9FB 0%, #E9EFF5 100%);
+    /* Typography & Color Overrides for Visibility */
+    h1, h2, h3, h4, h5, h6, .stMarkdown, p, span, label {
+        color: #1E293B !important; /* Force nearly black/dark blue color */
     }
     
-    /* Premium Sidebar */
+    .stApp {
+        background: linear-gradient(135deg, #F8F9FB 0%, #E9EFF5 100%);
+        color: #1E293B !important;
+    }
+    
+    /* Premium Sidebar labels and icons */
+    [data-testid="stSidebar"] section label, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] p {
+        color: #1E293B !important;
+    }
+    
     [data-testid="stSidebar"] {
-        background-color: white;
+        background-color: white !important;
         border-right: 1px solid #E0E4E8;
     }
     
@@ -50,6 +60,7 @@ st.markdown("""
         box-shadow: 0 10px 25px rgba(0,0,0,0.05);
         border: 1px solid #EFF2F5;
         margin-bottom: 20px;
+        color: #1E293B !important;
     }
     
     .status-badge {
@@ -61,28 +72,28 @@ st.markdown("""
         margin-bottom: 12px;
     }
     
-    .badge-green { background: #E6F9F0; color: #10B981; }
-    .badge-orange { background: #FFF7ED; color: #F59E0B; }
-    .badge-red { background: #FEF2F2; color: #EF4444; }
+    .badge-green { background: #E6F9F0; color: #10B981 !important; }
+    .badge-orange { background: #FFF7ED; color: #F59E0B !important; }
+    .badge-red { background: #FEF2F2; color: #EF4444 !important; }
     
     /* Typography */
     h1 {
         font-weight: 700;
         letter-spacing: -0.5px;
-        color: var(--primary);
+        color: #0A2540 !important;
     }
     
     .section-title {
         font-size: 1.25rem;
         font-weight: 600;
-        color: var(--primary);
+        color: #0A2540 !important;
         margin-bottom: 1rem;
         border-left: 4px solid var(--secondary);
         padding-left: 12px;
     }
 
     .info-label {
-        color: #64748B;
+        color: #64748B !important;
         font-size: 0.85rem;
         font-weight: 500;
         text-transform: uppercase;
@@ -92,7 +103,12 @@ st.markdown("""
     .big-value {
         font-size: 1.8rem;
         font-weight: 700;
-        color: var(--primary);
+        color: #0A2540 !important;
+    }
+    
+    /* Force inputs visibility */
+    .stTextInput input, .stNumberInput input, .stSlider div {
+        color: #1E293B !important;
     }
 </style>
 """, unsafe_allow_html=True)
